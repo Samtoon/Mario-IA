@@ -17,11 +17,17 @@ document.getElementById("inputFileToRead").addEventListener("change", function (
         const start = Date.now();
         camino = buscar(parseInt(document.getElementById("Algoritmo").value));
         const end = Date.now();
-        console.log(`Execution time: ${end - start} ms`);
+        reporte.tiempo = new Date(end - start).toISOString().slice(11, 19);
+        reporte.admisibilidad = "";
         document.querySelector(':root').style.setProperty("--dx", (camino[1].x - camino[0].x) * 66 + "px");
         console.log(getComputedStyle(document.querySelector(':root')).getPropertyValue("--dx"));
         document.querySelector(':root').style.setProperty("--dy", (camino[1].y - camino[0].y) * 66 + "px");
         console.log(getComputedStyle(document.querySelector(':root')).getPropertyValue("--dy"));
+        document.getElementById("nodosCreados").appendChild(document.createTextNode(reporte.nodos));
+        document.getElementById("tiempo").appendChild(document.createTextNode(reporte.tiempo));
+        document.getElementById("profundidad").appendChild(document.createTextNode(reporte.profundidad));
+        document.getElementById("admisibilidad").appendChild(document.createTextNode(reporte.admisibilidad));
+        document.getElementById("costo").appendChild(document.createTextNode(reporte.costo));
         //pasoMario();
         //buscar(1);
 
@@ -41,6 +47,7 @@ let indice = 1;
 let vidas = 3;
 const estado = { tipo: 0, duracion: 1 };
 let mario;
+const reporte = {};
 //El valor de cada agente en la matriz, según el enunciado del proyecto
 const valoresMatriz = {
     casillaLibre: 0,
@@ -101,7 +108,7 @@ function buscar(tipo = -1) {
     //Dependiendo del tipo, el primer nodo puede ser de clases distintas o con parámetros distintos
     switch (tipo) {
         case 2:          
-            nodos[0] = new Nodo(obtenerId(), null, posicionMario.y, posicionMario.x);
+            nodos[0] = new Nodo_Costo(obtenerId(), null, posicionMario.y, posicionMario.x);
             break;
         default:
             nodos[0] = new Nodo_Costo(obtenerId(), null, posicionMario.y, posicionMario.x, -1);
@@ -126,7 +133,7 @@ function buscar(tipo = -1) {
     }
     //Se inicializa el nodo actual como el nodo donde se encuentra la princesa
     nodoActual = nodos[nodosPendientes[0]];
-    profundidadMax=nodoActual.profundidad
+    profundidadMax=nodoActual.profundidad;
     while (nodoActual.padre != null) {
         //Mientras el padre del nodo actual no sea null (mientras no sea la posición de Mario), se añade al arreglo camino y nodo actual pasa a ser el padre del nodo anterior
         camino.splice(0, 0, { y: nodoActual.y, x: nodoActual.x,p:nodoActual.profundidad });
@@ -137,6 +144,9 @@ function buscar(tipo = -1) {
     camino.splice(0, 0, { y: nodoActual.y, x: nodoActual.x });
     console.log("El árbol tiene " + nodos.length);
     console.log("El camino tiene " + camino.length + " nodos");
+    reporte.nodos = nodos.length;
+    reporte.profundidad = profundidadMax;
+    reporte.costo = nodos[nodosPendientes[0]].costoAcumulado;
     //console.log("La profundidad es",);
     /*return "La princesa está en la posición x: " + nodos[nodosPendientes[0]].x + " y: " + nodos[nodosPendientes[0]].y
         + " con un costo Acumulado de " + nodos[nodosPendientes[0]].costoAcumulado + ". En el árbol hay " + nodos.length + " nodos \nx:" + camino.map((x) => {return x.x}) + "\ny:" + camino.map((x) => x.y);*/
@@ -150,9 +160,7 @@ function buscar(tipo = -1) {
 
     //Retorna la distancia de manhaytan de un nodo hasta la princesa,es usada como heuristica, ademas proporciona el numero por el que se quiere escalar la heuristica.
     function h_manhattan(nodo){
-
-        return (Math.abs(nodo.x-posicionPrincesa.x)+Math.abs(nodo.y-posicionPrincesa.y))
-
+        return (Math.abs(nodo.x-posicionPrincesa.x)+Math.abs(nodo.y-posicionPrincesa.y));
     }
 
 
@@ -200,7 +208,7 @@ function buscar(tipo = -1) {
             switch (tipo) {
                 case 1: //Amplitud
                     if (j == null) {    //Sólo crea el hijo en caso de que no se esté repitiendo
-                        const hijo = Nodo.crearHijo(params, nodo, idNuevoNodo);
+                        const hijo = Nodo_Costo.crearHijo(params, nodo, idNuevoNodo);
                         if (hijo != null) {     //Sólo crea el hijo en caso de que no sea null
                             //Se adelanta el id del siguiente hijo a + 1, se añade el hijo creado y se añade su id al final de la cola de nodos pendientes                   
                             obtenerId();
@@ -240,7 +248,7 @@ function buscar(tipo = -1) {
                 case 3: //Profundidad evitando ciclos
 
                     if (j == null) {
-                        const hijo = Nodo.crearHijo(params, nodo, idNuevoNodo);
+                        const hijo = Nodo_Costo.crearHijo(params, nodo, idNuevoNodo);
                         if (hijo != null) {
                             //Lo mismo que amplitud, pero esteril cambia a false y el hijo se añade en la segunda posición de la cola, puesto que la primera es eliminada
                             esteril = false;
@@ -260,7 +268,7 @@ function buscar(tipo = -1) {
                     }
                     break;
                 case 4: //Avara
-                        visitado = j != null;  //True si el hijo que se creará es de un nodo ya visitado. False en caso contrario
+                        /*visitado = j != null;  //True si el hijo que se creará es de un nodo ya visitado. False en caso contrario
                         k = nodo.id;
                         while (k != null) {
                             //Evalúa si hay algún nuevo Ciclo (definición en la clase Nodo Costo) en la rama
@@ -268,8 +276,8 @@ function buscar(tipo = -1) {
                                 break;
                             }
                             k = nodos[k].padre;
-                        }
-                        if (j == null || j < k) {   //Sólo crea el hijo en caso de que no se esté repitiendo o que el nodo a repetir haya sido creado antes del nuevo ciclo
+                        }*/
+                        if (j == null /*|| j < k*/) {   //Sólo crea el hijo en caso de que no se esté repitiendo o que el nodo a repetir haya sido creado antes del nuevo ciclo
                             const hijo = Nodo_Costo.crearHijo(params, nodo, idNuevoNodo, visitado);
                             if (hijo != null) {                         
                                 obtenerId();
@@ -284,7 +292,7 @@ function buscar(tipo = -1) {
                                     }
                                 }
                                 if (nodosPendientes.length == l) { nodosPendientes.push(hijo.id); }
-                                if(h_manhattan(hijo)==0){encontrado=true}                             
+                                /*if(h_manhattan(hijo)==0){encontrado=true}*/                             
                             }
                             
                         }
