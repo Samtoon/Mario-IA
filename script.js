@@ -1,17 +1,40 @@
-const { readFileSync } = require('fs');
-const { default: nodeTest } = require('node:test');
-const { performance } = require('perf_hooks');
+document.getElementById("inputFileToRead").addEventListener("change", function () {
+    console.log("hola")
+    var fr = new FileReader();
+    fr.readAsText(this.files[0]);
+    fr.onload = function (e) {
 
-//Lee el laberinto en forma de txt y lo retorna en forma de matriz
-function leerLaberinto() {
-    const laberinto = readFileSync("laberinto.txt", "utf-8").split(/\r?\n/).map((x) => x.split(" "));
-    return laberinto;
-}
+        //Lee el laberinto en forma de txt y lo retorna en forma de matriz
+        let l = e.target.result;
+        let resultado = l.split(/\r?\n/).map((x) => x.split(" "));
+        console.log(resultado);
+        laberinto = resultado;
+        tamanoLaberintoY = laberinto.length;
+        tamanoLaberintoX = laberinto[0].length;
+        
+        graficarLaberinto();
+        //recorrer(buscar(2));
+        camino = buscar(2);
+        document.querySelector(':root').style.setProperty("--dx", (camino[1].x - camino[0].x) * 66 + "px");
+        console.log(getComputedStyle(document.querySelector(':root')).getPropertyValue("--dx"));
+        document.querySelector(':root').style.setProperty("--dy", (camino[1].x - camino[0].x) * 66 + "px");
+        console.log(getComputedStyle(document.querySelector(':root')).getPropertyValue("--dy"));
+        //pasoMario();
+        //buscar(1);
+
+
+    };
+});
+
+
 
 //Laberinto en forma de matriz
-const laberinto = leerLaberinto();
+let laberinto = [];
 //Longitud del laberinto en y (número de filas)
-const tamanoLaberinto = laberinto.length;
+let tamanoLaberintoY = 0;
+let tamanoLaberintoX = 0;
+let camino = [];
+let indice = 0;
 //El valor de cada agente en la matriz, según el enunciado del proyecto
 const valoresMatriz = {
     casillaLibre: 0,
@@ -31,8 +54,8 @@ const costosMatriz = {
 
 //Grafica el laberinto en consola de forma ordenada
 function mirarLaberinto() {
-    for (let j = 0; j < tamanoLaberinto; j++) {
-        for (let i = 0; i < tamanoLaberinto; i++) {
+    for (let j = 0; j < tamanoLaberintoY; j++) {
+        for (let i = 0; i < tamanoLaberintoX; i++) {
             process.stdout.write(laberinto[j][i] + " ");
         }
         process.stdout.write("\n");
@@ -48,11 +71,12 @@ function buscar(tipo = -1) {
     //Se establece el punto de inicio de Mario
     const posicionMario = {};
     loop1:
-    for (let j = 0; j < tamanoLaberinto; j++) {
-        for (let i = 0; i < tamanoLaberinto; i++) {
+    for (let j = 0; j < tamanoLaberintoY; j++) {
+        for (let i = 0; i < tamanoLaberintoX; i++) {
             if (laberinto[j][i] == valoresMatriz.mario) {
                 posicionMario.y = j;
                 posicionMario.x = i;
+
                 break loop1;
             }
         }
@@ -93,15 +117,19 @@ function buscar(tipo = -1) {
     }
     //Se añade finalmente el nodo inicial de Mario
     camino.splice(0, 0, { y: nodoActual.y, x: nodoActual.x });
-    return "La princesa está en la posición x: " + nodos[nodosPendientes[0]].x + " y: " + nodos[nodosPendientes[0]].y
-        + " con un costo Acumulado de " + nodos[nodosPendientes[0]].costoAcumulado + ". En el árbol hay " + nodos.length + " nodos \nx:" + camino.map((x) => x.x) + "\ny:" + camino.map((x) => x.y);
+    console.log("El camino tiene " + camino.length + " nodos");
+    /*return "La princesa está en la posición x: " + nodos[nodosPendientes[0]].x + " y: " + nodos[nodosPendientes[0]].y
+        + " con un costo Acumulado de " + nodos[nodosPendientes[0]].costoAcumulado + ". En el árbol hay " + nodos.length + " nodos \nx:" + camino.map((x) => {return x.x}) + "\ny:" + camino.map((x) => x.y);*/
+    return camino;
+
     //Se llama para retornar el Id del nuevo nodo creado y al mismo tiempo aumentar el contador para el siguiente nodo
-        function obtenerId() {
+    function obtenerId() {
         idNuevoNodo += 1;
         return idNuevoNodo - 1;
     }
     //Recibe el nodo a expandir y añade sus hijos al arreglo nodos
     function expandir(nodo) {
+        console.log(`Expandiendo nodo x: ${nodo.x} y: ${nodo.y}`);
         //False si el nodo ingresado tiene hijos
         let esteril = true;
         //Si en el nodo que se está expandiendo se encuentra la princesa, sale de la función y encontrado cambia a true
@@ -119,15 +147,15 @@ function buscar(tipo = -1) {
                     params = { condicion: nodo.y == 0, nuevoY: nodo.y - 1, nuevoX: nodo.x };
                     break;
                 case 2: //Abajo
-                    params = { condicion: nodo.y == tamanoLaberinto - 1, nuevoY: nodo.y + 1, nuevoX: nodo.x };
+                    params = { condicion: nodo.y == tamanoLaberintoY - 1, nuevoY: nodo.y + 1, nuevoX: nodo.x };
                     break;
                 case 3: //Izquierda
                     params = { condicion: nodo.x == 0, nuevoY: nodo.y, nuevoX: nodo.x - 1 };
                     break;
                 default: //Derecha
-                    params = { condicion: nodo.x == tamanoLaberinto - 1, nuevoY: nodo.y, nuevoX: nodo.x + 1 };
+                    params = { condicion: nodo.x == tamanoLaberintoX - 1, nuevoY: nodo.y, nuevoX: nodo.x + 1 };
             }
-            j = nodo.id;
+            let j = nodo.id;
             //Evalúa que el nuevo nodo a crear aún no haya sido creado en la rama. Si al finalizar el while j no es null, el nuevo nodo se está repitiendo
             while (j != null) {
                 if (params.nuevoY == nodos[j].y && params.nuevoX == nodos[j].x) {
@@ -148,8 +176,8 @@ function buscar(tipo = -1) {
                     }
                     break;
                 case 2: //Costos
-                    visitado = j != null;  //True si el hijo que se creará es de un nodo ya visitado. False en caso contrario
-                    k = nodo.id;
+                    let visitado = j != null;  //True si el hijo que se creará es de un nodo ya visitado. False en caso contrario
+                    let k = nodo.id;
                     while (k != null) {
                         //Evalúa si hay algún nuevo Ciclo (definición en la clase Nodo Costo) en la rama
                         if (nodos[k].nuevoCiclo) {
@@ -162,7 +190,7 @@ function buscar(tipo = -1) {
                         if (hijo != null) {
                             obtenerId();
                             nodos.push(hijo);
-                            l = nodosPendientes.length;
+                            let l = nodosPendientes.length;
                             //Se ubica el id del nodo en la cola de nodos pendientes de acuerdo a su costo
                             for (let i = 0; i < l; i++) {
                                 if (nodos[nodosPendientes[i]].costoAcumulado > hijo.costoAcumulado) {
@@ -175,7 +203,7 @@ function buscar(tipo = -1) {
                     }
                     break;
                 case 3: //Profundidad evitando ciclos
-                    
+
                     if (j == null) {
                         const hijo = Nodo.crearHijo(params, nodo, idNuevoNodo);
                         if (hijo != null) {
@@ -183,7 +211,7 @@ function buscar(tipo = -1) {
                             esteril = false;
                             obtenerId();
                             nodos.push(hijo);
-                            nodosPendientes.splice(1,0,hijo.id);
+                            nodosPendientes.splice(1, 0, hijo.id);
                         }
                     }
                     if (i == 4 && esteril) {    //Si no se pudo crear ningún hijo, quiere decir que el nodo es estéril y que debe ser eliminado, pues ya no es de utilidad
@@ -211,11 +239,11 @@ class Nodo {    //Clase padre para los nodos
     }
     static crearHijo(params, nodo, id) {
         //Crea el hijo sólo si las condiciones enviadas no se cumplen y si en esa posición no existen muros
-        if (params.condicion) {}
+        if (params.condicion) { }
         else if (laberinto[params.nuevoY][params.nuevoX] != valoresMatriz.muro) {
             return new Nodo(id, nodo.id, params.nuevoY, params.nuevoX);
         }
-        return null; 
+        return null;
     }
 }
 
@@ -275,6 +303,7 @@ class Nodo_Costo extends Nodo {
 
 //console.log(busquedas.amplitud());
 //console.log(mirarLaberinto())
+/*
 let start = performance.now();
 console.log(buscar(1));
 let end = performance.now();
@@ -298,3 +327,161 @@ function prueba() {
     console.log(ejemplo.y);
     console.log(ejemplo2.y);
 }
+*/
+
+let vidas = 3;
+const estado = {tipo: 0, duracion: 1};
+
+function graficarLaberinto() {
+    console.log("hola");
+    let columnas = "";
+    for (let j = 0; j < tamanoLaberintoY; j++) {
+        for (let i = 0; i < tamanoLaberintoX; i++) {
+            let valor = "";
+            columnas = j == 0 ? columnas + "auto " : columnas;
+            let id = j * tamanoLaberintoX + i + 1;
+            let documento = document.getElementById("contenedor");
+            let casilla = document.createElement("div");
+            casilla.className = "casilla";
+            casilla.setAttribute("id", "c" + id);
+            switch (parseInt(laberinto[j][i])) {
+                case valoresMatriz.muro:
+                    valor = "muro";
+                    break;
+                case valoresMatriz.mario:
+                    valor = "mario";
+                    break;
+                case valoresMatriz.estrella:
+                    valor = "estrella";
+                    break;
+                case valoresMatriz.flor:
+                    valor = "flor";
+                    break;
+                case valoresMatriz.koopa:
+                    valor = "koopa";
+                    break;
+                case valoresMatriz.princesa:
+                    valor = "princesa";
+                    break;
+                default:
+                    console.log("ninguno");
+            }
+            if (valor != "") {
+                let elemento = document.createElement("div");
+                elemento.className = valor;
+                if (valor == "mario") {
+                    elemento.id = "mario";
+                    elemento.addEventListener("animationend", pasoMario);
+                }
+                casilla.appendChild(elemento);
+            }
+            documento.appendChild(casilla);
+        }
+    }
+    document.getElementById("contenedor").style.gridTemplateColumns = columnas;
+    document.getElementById("vidas").innerHTML = vidas;
+}
+
+
+
+function recorrer(camino = []) {
+    console.log("Recibí un camino")
+    let detener = false;
+    let i = 1;
+    while (!detener) {
+        let present = i;
+        setTimeout(() => {
+            let id = camino[present].y * tamanoLaberintoX + camino[present].x + 1;
+            document.getElementById("c" + id).style.backgroundColor = "coral";
+            efectoCasilla(camino[present]);
+        }, i * 50);
+        i += 1;
+        console.log(i);
+        detener = i == camino.length && vidas > 0 ? true : false;
+    }
+}
+
+
+function pasoMario() {
+    let id = camino[indice].y * tamanoLaberintoX + camino[indice].x + 1;
+    document.getElementById("c" + id).appendChild(document.getElementById("mario"));
+    console.log("indice:" + indice);
+    console.log(document.getElementById("mario").parentElement);
+    if(indice == camino.length - 1 || vidas == 0){
+        document.getElementById("mario").style.animationPlayState = "paused";
+    }
+    else{
+    let nodo = camino[indice];
+    let raiz = document.querySelector(':root');
+    const direccion = {dx: camino[indice + 1].x - nodo.x, dy: camino[indice + 1].y - nodo.y};
+    if (direccion.dx == 1) {
+        raiz.style.setProperty("--anguloY", "180deg");
+    }
+    else if (direccion.dx == -1) {
+        raiz.style.setProperty("--anguloY", "0deg");
+    }
+    raiz.style.setProperty("--dx", (direccion.dx) * 66 + "px");
+    raiz.style.setProperty("--dy", (direccion.dy) * 66 + "px");
+    //onsole.log("El evento terminado es: " + event.animationName);
+    efectoCasilla(nodo);
+    indice += 1;
+    }
+}
+
+function efectoCasilla(nodo) {
+    const id = nodo.y * tamanoLaberintoX + nodo.x + 1;
+    document.getElementById("c" + id).style.backgroundColor = "coral";
+    const valorLaberinto = parseInt(laberinto[nodo.y][nodo.x]);
+    console.log(valorLaberinto);
+    if (estado.duracion == 0) {
+        estado.tipo = 0;
+        estado.duracion = 1;
+    }
+    estado.duracion = estado.tipo == 1 ? estado.duracion - 1 : estado.duracion;
+    switch (valorLaberinto) {
+        case 3:
+            if (estado.tipo != 2) {
+                estado.duracion = estado.tipo == 1 ? estado.duracion + 6 : 6;
+                estado.tipo = 1;
+            }
+        case 4:
+            if (estado.tipo != 1) {
+                estado.duracion = estado.tipo == 2 ? estado.duracion + 1 : 1;
+                estado.tipo = 2;
+            }
+            break;
+        case 5:
+            vidas = estado.tipo == 0 ? vidas - 1 : vidas;
+            estado.duracion = estado.tipo == 2 ? estado.duracion - 1 : estado.duracion;
+            break;
+        case 6:
+            console.log("encontrada");
+            break;
+        default:
+    }
+    let bonificacion;
+    let src;
+    switch (estado.tipo) {
+        case 1:
+            bonificacion = "Estrella";
+            src = "sprites/Estrella.png";
+            break;
+        case 2:
+            bonificacion = "Flor";
+            src = "sprites/Flor.png";
+            break;
+        default:
+            bonificacion = "";
+            src = "";
+    }
+    console.log("Duración:" + estado.duracion);
+    /*document.getElementById("c" + id).innerHTML = ""; */
+    let vidasHTML = "";
+    for(let i = 0; i < vidas; i++) {
+        vidasHTML += "<img src=sprites/Corazon.png \>";
+    }
+    document.getElementById("vidas").innerHTML = vidasHTML;
+    document.getElementById("bonificación").innerHTML = src == "" ? "" : `<img src=${src}\>`;
+    document.getElementById("duración").innerHTML = estado.tipo != 0 ? estado.duracion : "";
+}
+
