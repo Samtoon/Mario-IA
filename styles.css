@@ -1,18 +1,36 @@
 :root {
+    --dxviejo: 0px;
+    --dyviejo: 0px;
     --dx: 0px;
     --dy: 0px;
     --anguloYviejo: 180deg;
+    --anguloY: 180deg;
+}
+
+
+#reporte {
+    position: absolute;
+    left: 0%;
+    top: inherit;
+    padding-left: 2rem;
+}
+
+body {
+    background-color: aquamarine;
 }
 
 .grid-container {
     display: inline-grid;
     background-color: aqua;
     grid-template-columns: auto auto;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .casilla {
     display: flex;
-    background-color: red;
+    background-color: coral;
     width: 64px;
     height: 64px;
     justify-content: center;
@@ -29,8 +47,13 @@
 }
 
 @keyframes girarY {
-    from {transform: rotateY(0deg);}
-    to {transform: rotateY(180deg);}
+    from {transform: rotateY(0deg); }
+    to {transform: rotateY(360deg); }
+}
+
+@keyframes girarZMario {
+    from {transform: rotateZ(0deg);}
+    to {transform: rotateZ(360deg);}
 }
 
 @keyframes estrella {
@@ -45,6 +68,22 @@
     100% {background-image: url("sprites/Koopa_pie0.png");}
 }
 
+@keyframes koopaPataleta {
+    0% {background-image: url("sprites/Koopa_pataleta0.png");}
+    25% {background-image: url("sprites/Koopa_pataleta1.png");}
+    50% {background-image: url("sprites/Koopa_pataleta2.png");}
+    75% {background-image: url("sprites/Koopa_pataleta1.png");}
+    100% {background-image: url("sprites/Koopa_pataleta0.png");}
+}
+
+@keyframes koopaPataletaQuemado {
+    0% {background-image: url("sprites/Koopa_pataleta_quemado0.png");}
+    25% {background-image: url("sprites/Koopa_pataleta_quemado1.png");}
+    50% {background-image: url("sprites/Koopa_pataleta_quemado2.png");}
+    75% {background-image: url("sprites/Koopa_pataleta_quemado1.png");}
+    100% {background-image: url("sprites/Koopa_pataleta_quemado0.png");}
+}
+
 @keyframes peach {
     0% {background-image: url("sprites/Peach_parpadeo0.png");}
     75% {background-image: url("sprites/Peach_parpadeo1.png");}
@@ -54,17 +93,43 @@
 }
 
 @keyframes moverMario {
-    from {transform: translate(0,0) rotateY(var(--anguloY));}
+    from {transform: translate(var(--dxviejo),var(--dyviejo)) rotateY(var(--anguloYviejo));}
     to {transform: translate(var(--dx), var(--dy)) rotateY(var(--anguloY));}
 }
 
 @keyframes marioCamina {
-    0% {background-image: url("sprites/Mario_camina0.png"); transform: rotateY(var(--anguloY));}
-    25% {background-image: url("sprites/Mario_camina1.png"); transform: rotateY(var(--anguloY));}
-    50% {background-image: url("sprites/Mario_camina2.png"); transform: rotateY(var(--anguloY));}
-    75% {background-image: url("sprites/Mario_camina1.png"); transform: rotateY(var(--anguloY));}
-    100% {background-image: url("sprites/Mario_camina0.png"); transform: rotateY(var(--anguloY));}
+    0% {background-image: url("sprites/Mario_camina0.png"); }
+    25% {background-image: url("sprites/Mario_camina1.png"); }
+    50% {background-image: url("sprites/Mario_camina2.png"); }
+    75% {background-image: url("sprites/Mario_camina1.png"); }
+    100% {background-image: url("sprites/Mario_camina0.png"); }
 }
+
+@keyframes marioSube {
+    0% {background-image: url("sprites/Mario_sube0.png"); }
+    25% {background-image: url("sprites/Mario_sube1.png"); }
+    50% {background-image: url("sprites/Mario_sube2.png"); }
+    75% {background-image: url("sprites/Mario_sube1.png"); }
+    100% {background-image: url("sprites/Mario_sube0.png"); }
+}
+
+@keyframes marioPulgar {
+    0% {background-image: url("sprites/Mario_camina0.png"); transform: rotateY(var(--anguloY));}
+    50% {background-image: url("sprites/Mario_pulgar0.png"); transform: rotateY(var(--anguloY));}
+    100% {background-image: url("sprites/Mario_pulgar1.png"); transform: rotateY(var(--anguloY));}
+}
+
+@keyframes peachSorpresa {
+    from {background-image: url("sprites/Peach_sorpresa0.png");}
+    to {background-image: url("sprites/Peach_sorpresa1.png");}
+}
+
+@keyframes marioDaño {
+    0% {background-image: url("sprites/Mario_golpe1.png"); transform: translate(var(--dxviejo),var(--dyviejo)) rotateY(var(--anguloY));}
+    25% {background-image: url("sprites/Mario_golpe0.png"); transform: translate(var(--dxviejo),var(--dyviejo)) rotateY(var(--anguloY));}
+    100% {background-image: url("sprites/Mario_golpe0.png"); transform: translate(var(--dxviejo),var(--dyviejo)) rotateY(var(--anguloY));}
+}
+
 
 .estrella {
     background-image: url("sprites/Estrella_pie0.png");
@@ -81,6 +146,8 @@
 }
 
 .koopa {
+    --koopa-anguloYviejo: 0deg;
+    --koopa-anguloY: 0deg;
     background-image: url("sprites/Koopa_pie0.png");
     background-repeat: no-repeat;
     width: inherit;
@@ -98,6 +165,7 @@
     background-image: url("sprites/Peach_parpadeo0.png");
     background-repeat: no-repeat;
     width: inherit;
+    z-index: 1;
     height: 200%;
     background-size: 100%;
     background-position: center bottom;
@@ -124,8 +192,33 @@
     height: 200%;
     background-size: 100%;
     background-position: center bottom;
-    animation: marioCamina 250ms step-end infinite , moverMario 500ms linear forwards;
 }
+
+.camina {
+    animation: marioCamina 150ms step-end infinite, moverMario 300ms linear infinite forwards;
+}
+
+.sube {
+    animation: marioSube 150ms step-end infinite, moverMario 300ms linear infinite forwards;
+}
+
+.pataleta {
+    animation: koopaPataleta 350ms step-start infinite, girarY 600ms linear infinite;
+}
+
+.pataletaQuemado {
+    animation: koopaPataletaQuemado 350ms step-start infinite, girarY 600ms linear infinite;
+}
+
+.daño {
+    animation: marioDaño 500ms step-start 2;
+}
+
+.muerte {
+    animation: marioDaño 500ms step-start 2 forwards, girarZMario 900ms linear infinite;
+}
+
+
 
 
 

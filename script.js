@@ -1,5 +1,4 @@
 document.getElementById("inputFileToRead").addEventListener("change", function () {
-    console.log("hola")
     var fr = new FileReader();
     fr.readAsText(this.files[0]);
     fr.onload = function (e) {
@@ -11,13 +10,17 @@ document.getElementById("inputFileToRead").addEventListener("change", function (
         laberinto = resultado;
         tamanoLaberintoY = laberinto.length;
         tamanoLaberintoX = laberinto[0].length;
-        
+
         graficarLaberinto();
         //recorrer(buscar(2));
-        camino = buscar(2);
+        console.log("Voy a buscar con " + document.getElementById("Algoritmo").value);
+        const start = Date.now();
+        camino = buscar(parseInt(document.getElementById("Algoritmo").value));
+        const end = Date.now();
+        console.log(`Execution time: ${end - start} ms`);
         document.querySelector(':root').style.setProperty("--dx", (camino[1].x - camino[0].x) * 66 + "px");
         console.log(getComputedStyle(document.querySelector(':root')).getPropertyValue("--dx"));
-        document.querySelector(':root').style.setProperty("--dy", (camino[1].x - camino[0].x) * 66 + "px");
+        document.querySelector(':root').style.setProperty("--dy", (camino[1].y - camino[0].y) * 66 + "px");
         console.log(getComputedStyle(document.querySelector(':root')).getPropertyValue("--dy"));
         //pasoMario();
         //buscar(1);
@@ -34,7 +37,10 @@ let laberinto = [];
 let tamanoLaberintoY = 0;
 let tamanoLaberintoX = 0;
 let camino = [];
-let indice = 0;
+let indice = 1;
+let vidas = 3;
+const estado = { tipo: 0, duracion: 1 };
+let mario;
 //El valor de cada agente en la matriz, según el enunciado del proyecto
 const valoresMatriz = {
     casillaLibre: 0,
@@ -70,13 +76,22 @@ function buscar(tipo = -1) {
     let idNuevoNodo = 0;
     //Se establece el punto de inicio de Mario
     const posicionMario = {};
+    const posicionPrincesa = {};
     loop1:
     for (let j = 0; j < tamanoLaberintoY; j++) {
         for (let i = 0; i < tamanoLaberintoX; i++) {
             if (laberinto[j][i] == valoresMatriz.mario) {
                 posicionMario.y = j;
                 posicionMario.x = i;
-
+            }
+            else if (laberinto[j][i] == valoresMatriz.princesa) {
+                posicionPrincesa.y = j;
+                posicionPrincesa.x = i;
+            }
+            if (Object.keys(posicionMario) != 0 && Object.keys(posicionPrincesa) != 0) {
+                console.log("me rompo");
+                console.log(posicionMario.x);
+                console.log(posicionPrincesa.x);
                 break loop1;
             }
         }
@@ -117,6 +132,7 @@ function buscar(tipo = -1) {
     }
     //Se añade finalmente el nodo inicial de Mario
     camino.splice(0, 0, { y: nodoActual.y, x: nodoActual.x });
+    console.log("El árbol tiene " + nodos.length);
     console.log("El camino tiene " + camino.length + " nodos");
     /*return "La princesa está en la posición x: " + nodos[nodosPendientes[0]].x + " y: " + nodos[nodosPendientes[0]].y
         + " con un costo Acumulado de " + nodos[nodosPendientes[0]].costoAcumulado + ". En el árbol hay " + nodos.length + " nodos \nx:" + camino.map((x) => {return x.x}) + "\ny:" + camino.map((x) => x.y);*/
@@ -224,6 +240,27 @@ function buscar(tipo = -1) {
                         }
                     }
                     break;
+                case 4: //Avara
+                    if (j == null) {    //Sólo crea el hijo en caso de que no se esté repitiendo
+                        const hijo = Nodo.crearHijo(params, nodo, idNuevoNodo);
+                        if (hijo != null) {     //Sólo crea el hijo en caso de que no sea null
+                            //Se adelanta el id del siguiente hijo a + 1, se añade el hijo creado y se añade su id al final de la cola de nodos pendientes
+                            obtenerId();
+                            nodos.push(hijo);
+                            let l = nodosPendientes.length;
+                            //Se ubica el id del nodo en la cola de nodos pendientes de acuerdo a su costo
+                            for (let i = 1; i < l; i++) {
+                                if (distanciaManhattan(nodos[nodosPendientes[i]]) > distanciaManhattan(hijo)) {
+                                    nodosPendientes.splice(i, 0, hijo.id);
+                                    break;
+                                }
+                            }
+                            if (nodosPendientes.length == l) { nodosPendientes.push(hijo.id); }
+                        }
+                    }
+                    function distanciaManhattan(nodo) {
+                        return Math.abs(posicionPrincesa.x - nodo.x) + Math.abs(posicionPrincesa.y - nodo.y);
+                    }
                 default:
             }
         }
@@ -329,11 +366,7 @@ function prueba() {
 }
 */
 
-let vidas = 3;
-const estado = {tipo: 0, duracion: 1};
-
 function graficarLaberinto() {
-    console.log("hola");
     let columnas = "";
     for (let j = 0; j < tamanoLaberintoY; j++) {
         for (let i = 0; i < tamanoLaberintoX; i++) {
@@ -344,12 +377,16 @@ function graficarLaberinto() {
             let casilla = document.createElement("div");
             casilla.className = "casilla";
             casilla.setAttribute("id", "c" + id);
+            let elemento = document.createElement("div");
             switch (parseInt(laberinto[j][i])) {
                 case valoresMatriz.muro:
                     valor = "muro";
                     break;
                 case valoresMatriz.mario:
                     valor = "mario";
+                    elemento.id = "mario";
+                    elemento.addEventListener("animationiteration", pasoMario);
+                    elemento.classList.add("camina");
                     break;
                 case valoresMatriz.estrella:
                     valor = "estrella";
@@ -364,73 +401,81 @@ function graficarLaberinto() {
                     valor = "princesa";
                     break;
                 default:
-                    console.log("ninguno");
             }
             if (valor != "") {
-                let elemento = document.createElement("div");
-                elemento.className = valor;
-                if (valor == "mario") {
-                    elemento.id = "mario";
-                    elemento.addEventListener("animationend", pasoMario);
-                }
+                elemento.classList.add(valor);
                 casilla.appendChild(elemento);
             }
             documento.appendChild(casilla);
         }
     }
+    mario = document.getElementById("mario");
     document.getElementById("contenedor").style.gridTemplateColumns = columnas;
-    document.getElementById("vidas").innerHTML = vidas;
 }
 
-
-
-function recorrer(camino = []) {
-    console.log("Recibí un camino")
-    let detener = false;
-    let i = 1;
-    while (!detener) {
-        let present = i;
-        setTimeout(() => {
-            let id = camino[present].y * tamanoLaberintoX + camino[present].x + 1;
-            document.getElementById("c" + id).style.backgroundColor = "coral";
-            efectoCasilla(camino[present]);
-        }, i * 50);
-        i += 1;
-        console.log(i);
-        detener = i == camino.length && vidas > 0 ? true : false;
-    }
-}
-
-
-function pasoMario() {
-    let id = camino[indice].y * tamanoLaberintoX + camino[indice].x + 1;
-    document.getElementById("c" + id).appendChild(document.getElementById("mario"));
-    console.log("indice:" + indice);
-    console.log(document.getElementById("mario").parentElement);
-    if(indice == camino.length - 1 || vidas == 0){
-        document.getElementById("mario").style.animationPlayState = "paused";
-    }
-    else{
-    let nodo = camino[indice];
-    let raiz = document.querySelector(':root');
-    const direccion = {dx: camino[indice + 1].x - nodo.x, dy: camino[indice + 1].y - nodo.y};
-    if (direccion.dx == 1) {
-        raiz.style.setProperty("--anguloY", "180deg");
-    }
-    else if (direccion.dx == -1) {
-        raiz.style.setProperty("--anguloY", "0deg");
-    }
-    raiz.style.setProperty("--dx", (direccion.dx) * 66 + "px");
-    raiz.style.setProperty("--dy", (direccion.dy) * 66 + "px");
-    //onsole.log("El evento terminado es: " + event.animationName);
-    efectoCasilla(nodo);
-    indice += 1;
+function pasoMario(event) {
+    if (event.animationName == "moverMario") {
+        let id = camino[indice].y * tamanoLaberintoX + camino[indice].x + 1;
+        //document.getElementById("c" + id).appendChild(mario);
+        console.log("indice:" + indice);
+        console.log(mario.parentElement);
+        const nodo = camino[indice];
+        const raiz = document.querySelector(':root');
+        raiz.style.setProperty("--anguloYviejo", getComputedStyle(raiz).getPropertyValue("--anguloY"));
+        const valxant = parseInt(getComputedStyle(raiz).getPropertyValue("--dx"));
+            console.log(parseInt(valxant));
+            const valyant = parseInt(getComputedStyle(raiz).getPropertyValue("--dy"));
+            console.log(parseInt(valyant));
+            raiz.style.setProperty("--dxviejo", valxant + "px");
+            raiz.style.setProperty("--dyviejo", valyant + "px");
+        if (vidas == 0) {
+            document.getElementById("c" + id).innerHTML = "";
+            document.getElementById("c" + id).appendChild(mario);
+            mario.classList.remove("camina");
+            mario.classList.remove("sube");
+            mario.classList.add("muerte");
+            mario.style.height = "100%";
+            //mario.style.transform = "translate(var(--dx),var(--dy))";
+        }
+        else if (indice == camino.length - 1) {
+            id = camino[indice - 1].y * tamanoLaberintoX + camino[indice - 1].x + 1;
+            document.getElementById("c" + id).appendChild(mario);
+            mario.style.animationPlayState = "paused";
+            mario.style.animation = "marioPulgar 1000ms step-end forwards";
+            document.getElementsByClassName("princesa")[0].style.animation = "peachSorpresa 250ms step-end forwards";
+            efectoCasilla(nodo);
+            indice += 1;
+        }
+        else {
+            const direccion = { dx: camino[indice + 1].x - nodo.x, dy: camino[indice + 1].y - nodo.y };
+            if (direccion.dx == 1) {
+                raiz.style.setProperty("--anguloY", "180deg");
+            }
+            else if (direccion.dx == -1) {
+                raiz.style.setProperty("--anguloY", "0deg");
+            }
+            if (direccion.dy == -1) {
+                mario.classList.replace("camina", "sube");
+            }
+            else {
+                if (mario.classList.contains("sube")) {
+                    mario.classList.replace("sube", "camina");
+                }
+            }
+            raiz.style.setProperty("--dx", ((direccion.dx) * 66 + valxant) + "px");
+            raiz.style.setProperty("--dy", ((direccion.dy) * 66 + valyant) + "px");
+            //onsole.log("El evento terminado es: " + event.animationName);
+            efectoCasilla(nodo);
+            indice += 1;
+        }
+    } else if (event.animationName == "marioDaño") {
+        mario.classList.remove("daño");
     }
 }
 
 function efectoCasilla(nodo) {
     const id = nodo.y * tamanoLaberintoX + nodo.x + 1;
-    document.getElementById("c" + id).style.backgroundColor = "coral";
+    //document.getElementById("c" + id).style.backgroundColor = "coral";
     const valorLaberinto = parseInt(laberinto[nodo.y][nodo.x]);
     console.log(valorLaberinto);
     if (estado.duracion == 0) {
@@ -439,49 +484,87 @@ function efectoCasilla(nodo) {
     }
     estado.duracion = estado.tipo == 1 ? estado.duracion - 1 : estado.duracion;
     switch (valorLaberinto) {
-        case 3:
+        case valoresMatriz.estrella:
             if (estado.tipo != 2) {
                 estado.duracion = estado.tipo == 1 ? estado.duracion + 6 : 6;
                 estado.tipo = 1;
+                laberinto[nodo.y][nodo.x] = "0";
+                document.getElementById("c" + id).innerHTML = "";
             }
-        case 4:
+        case valoresMatriz.flor:
             if (estado.tipo != 1) {
                 estado.duracion = estado.tipo == 2 ? estado.duracion + 1 : 1;
                 estado.tipo = 2;
+                laberinto[nodo.y][nodo.x] = "0";
+                document.getElementById("c" + id).innerHTML = "";
             }
             break;
-        case 5:
+        case valoresMatriz.koopa:
             vidas = estado.tipo == 0 ? vidas - 1 : vidas;
             estado.duracion = estado.tipo == 2 ? estado.duracion - 1 : estado.duracion;
+            if (estado.tipo == 1) {
+                document.getElementById("c" + id).firstChild.classList.add("pataleta");
+            } else if (estado.tipo == 2) {
+                document.getElementById("c" + id).firstChild.classList.add("pataletaQuemado");
+            } else {
+                console.log("daño");
+                mario.classList.add("daño");
+            }
             break;
-        case 6:
+        case valoresMatriz.princesa:
             console.log("encontrada");
             break;
         default:
     }
-    let bonificacion;
     let src;
     switch (estado.tipo) {
         case 1:
-            bonificacion = "Estrella";
             src = "sprites/Estrella.png";
             break;
         case 2:
-            bonificacion = "Flor";
             src = "sprites/Flor.png";
             break;
         default:
-            bonificacion = "";
             src = "";
     }
     console.log("Duración:" + estado.duracion);
     /*document.getElementById("c" + id).innerHTML = ""; */
     let vidasHTML = "";
-    for(let i = 0; i < vidas; i++) {
+    for (let i = 0; i < vidas; i++) {
         vidasHTML += "<img src=sprites/Corazon.png \>";
     }
     document.getElementById("vidas").innerHTML = vidasHTML;
     document.getElementById("bonificación").innerHTML = src == "" ? "" : `<img src=${src}\>`;
     document.getElementById("duración").innerHTML = estado.tipo != 0 ? estado.duracion : "";
+}
+
+function mostrarAlgoritmos() {
+    const selector = document.getElementById("Algoritmo");
+    const opcion1 = document.createElement("option");
+    const opcion2 = document.createElement("option");
+    const opcion3 = document.createElement("option");
+    selector.innerHTML = "";
+    if (document.getElementById("tipoBusqueda").value == "NoInformada") {
+        opcion1.value = "1";
+        opcion1.innerHTML = "preferente por Amplitud";
+        selector.appendChild(opcion1);
+        opcion2.value = "2";
+        opcion2.innerHTML = "de costo uniforme";
+        selector.appendChild(opcion2);
+        opcion3.value = "3";
+        opcion3.innerHTML = "preferente por profundidad evitando ciclos";
+        selector.appendChild(opcion3);
+        console.log("NoInformada");
+    }
+    else {
+        console.log("Informada");
+        opcion1.value = "4";
+        opcion1.innerHTML = "Avara";
+        selector.appendChild(opcion1);
+        opcion2.value = "5";
+        opcion2.innerHTML = "A*";
+        selector.appendChild(opcion2);
+        console.log("NoInformada");
+    }
 }
 

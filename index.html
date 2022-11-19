@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -7,12 +8,30 @@
     <title>Document</title>
     <link rel="stylesheet" href="styles.css">
 </head>
-<input type="file" name="inputFileToRead" id="inputFileToRead" />
-<script src="script.js"></script>
+
 <body>
-    <h1>
-        HOLA
-    </h1>
+    <div style="text-align: center;">
+        <h1>
+            LAS FLIPANTES AVENTURAS DE PEPE, EL FONTANERO INGENIERO
+        </h1>
+    </div>
+    <div style="padding-left: 2rem;">
+    
+        <label>Tipo de búsqueda:</label>
+        <select id="tipoBusqueda" onChange="mostrarAlgoritmos()">
+            <option value="NoInformada">No Informada</option>
+            <option value="Informada">Informada</option>
+        </select>
+        <br>
+        <label>Búsqueda:</label>
+        <select id="Algoritmo" onChange="document.getElementById('contenedor').innerHTML = ''">
+            <option value="1">preferente por Amplitud</option>
+            <option value="2">de costo uniforme</option>
+            <option value="3">preferente por profundidad evitando ciclos</option>
+        </select>
+        <br>
+        <input type="file" name="inputFileToRead" id="inputFileToRead" />
+    
     <div>
         Vidas:
         <span id="vidas"></span>
@@ -25,7 +44,30 @@
         Duración:
         <span id="duración"></span>
     </div>
-    <div class="grid-container" id="contenedor">
     </div>
+    <div class="grid-container" id="contenedor"></div>
+    <div id="reporte">
+        <h3>
+            REPORTE:
+        </h3>
+        <div id="nodosCreados">
+            Nodos creados:
+        </div>
+        <div id="tiempo">
+            Tiempo:
+        </div>
+        <div id="profundidad">
+            Profundidad:
+        </div>
+        <div id="admisibilidad">
+            Admisibilidad:
+        </div>
+        <div id="costo">
+            Costo:
+        </div>
+    </div>
+
 </body>
+<script src="script.js"></script>
+
 </html>

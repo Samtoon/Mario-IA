@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "brfs": "^2.0.2",
+    "browserify-fs": "^1.0.0",
+    "fs": "^0.0.1-security",
+    "uniq": "^1.0.1"
+  },
+  "type": "module"
+}
