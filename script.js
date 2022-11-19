@@ -18,7 +18,7 @@ document.getElementById("inputFileToRead").addEventListener("change", function (
         camino = buscar(parseInt(document.getElementById("Algoritmo").value));
         const end = Date.now();
         reporte.tiempo = new Date(end - start).toISOString().slice(11, 19);
-        reporte.admisibilidad = "";
+        reporte.admisibilidad = newton_raphson(reporte.profundidad, reporte.nodos);
         document.querySelector(':root').style.setProperty("--dx", (camino[1].x - camino[0].x) * 66 + "px");
         console.log(getComputedStyle(document.querySelector(':root')).getPropertyValue("--dx"));
         document.querySelector(':root').style.setProperty("--dy", (camino[1].y - camino[0].y) * 66 + "px");
@@ -630,5 +630,31 @@ function mostrarAlgoritmos() {
         selector.appendChild(opcion2);
         console.log("NoInformada");
     }
+}
+
+function polinomio(n,x,nodos){
+    let valor=0;
+    for(let i=0 ; i<=n ; i++){
+        valor=valor+Math.pow(x,i);
+    }
+    return valor-nodos;
+}
+
+function derivada(n,x){
+    let valor=0;
+    for(let i=0 ; i<=n ; i++){
+        if(i>0){
+            valor=valor+i*Math.pow(x,i-1);
+        }
+    }
+    return valor;
+}
+
+function newton_raphson(n,nodos){
+    let x = 0;
+    for(let i=0 ; i<=1000 ; i++){
+        x = x - (polinomio(n,x,nodos) / derivada(n,x));
+    }
+    return x;
 }
 
