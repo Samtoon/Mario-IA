@@ -144,6 +144,7 @@ function buscar(tipo = -1) {
     camino.splice(0, 0, { y: nodoActual.y, x: nodoActual.x });
     console.log("El árbol tiene " + nodos.length);
     console.log("El camino tiene " + camino.length + " nodos");
+    console.log("la profundidad Maxima es:", profundidadMax)
     reporte.nodos = nodos.length;
     reporte.profundidad = profundidadMax;
     reporte.costo = nodos[nodosPendientes[0]].costoAcumulado;
@@ -160,7 +161,7 @@ function buscar(tipo = -1) {
 
     //Retorna la distancia de manhaytan de un nodo hasta la princesa,es usada como heuristica, ademas proporciona el numero por el que se quiere escalar la heuristica.
     function h_manhattan(nodo){
-        return (Math.abs(nodo.x-posicionPrincesa.x)+Math.abs(nodo.y-posicionPrincesa.y));
+        return (Math.abs(nodo.x-posicionPrincesa.x)+Math.abs(nodo.y-posicionPrincesa.y))/2;
     }
 
 
@@ -286,15 +287,14 @@ function buscar(tipo = -1) {
                                 nodos.push(hijo);
                                 let l = nodosPendientes.length;
                                 console.log(h_manhattan( hijo))
-                                //Se ubica el id del nodo en la cola de nodos pendientes de acuerdo a su costo
+                                //Se ubica el id del nodo en la cola de nodos pendientes de acuerdo a su heuristica
                                 for (let i = 1; i < l; i++) {
                                     if (h_manhattan( nodos[nodosPendientes[i]]) > h_manhattan( hijo)) {
                                         nodosPendientes.splice(i, 0, hijo.id);
                                         break;
                                     }
                                 }
-                                if (nodosPendientes.length == l) { nodosPendientes.push(hijo.id); }
-                                /*if(h_manhattan(hijo)==0){encontrado=true}*/                             
+                                if (nodosPendientes.length == l) { nodosPendientes.push(hijo.id); }                                                    
                             }
                             
                         }
@@ -315,11 +315,9 @@ function buscar(tipo = -1) {
                             obtenerId();
                             nodos.push(hijo);
                             let l = nodosPendientes.length;
-                            //Se ubica el id del nodo en la cola de nodos pendientes de acuerdo a su costo
+                            //Se ubica el id del nodo en la cola de nodos pendientes de acuerdo a su heuristica y costo
                             for (let i = 1; i < l; i++) {
-                                //console.log(nodosPendientes);
-                                //console.log(`La heurística del nodo id: ${nodosPendientes[i]} padre:${nodos[nodosPendientes[i]].padre} en x: ${nodos[nodosPendientes[i]].x} y: ${nodos[nodosPendientes[i]].y} es ${h_manhattan( nodos[nodosPendientes[i]]) + nodos[nodosPendientes[i]].costoAcumulado}`);
-                                //console.log(`La heurística del nodo id: ${hijo.id} padre:${hijo.padre} en x: ${hijo.x} y: ${hijo.y} es ${h_manhattan( hijo) + hijo.costoAcumulado}`);
+                                
                                 if (h_manhattan( nodos[nodosPendientes[i]]) + nodos[nodosPendientes[i]].costoAcumulado > h_manhattan(hijo)+hijo.costoAcumulado) {
                                     nodosPendientes.splice(i, 0, hijo.id);
                                     break;
