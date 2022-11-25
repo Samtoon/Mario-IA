@@ -108,7 +108,7 @@ function buscar(tipo = -1) {
     //Dependiendo del tipo, el primer nodo puede ser de clases distintas o con parámetros distintos
     switch (tipo) {
         case 2:          
-            nodos[0] = new Nodo_Costo(obtenerId(), null, posicionMario.y, posicionMario.x);
+            nodos[0] = new Nodo_Costo(obtenerId(), null, posicionMario.y, posicionMario.x, -1);
             break;
         default:
             nodos[0] = new Nodo_Costo(obtenerId(), null, posicionMario.y, posicionMario.x, -1);
@@ -169,7 +169,7 @@ function buscar(tipo = -1) {
 
     //Recibe el nodo a expandir y añade sus hijos al arreglo nodos
     function expandir(nodo) {
-        console.log(`Expandiendo nodo x: ${nodo.x} y: ${nodo.y}`);
+        console.log(`Expandiendo nodo id: ${nodo.id} padre: ${nodo.padre} x: ${nodo.x} y: ${nodo.y}`);
         //False si el nodo ingresado tiene hijos
         let esteril = true;
         //Si en el nodo que se está expandiendo se encuentra la princesa, sale de la función y encontrado cambia a true
@@ -196,19 +196,21 @@ function buscar(tipo = -1) {
                     params = { condicion: nodo.x == tamanoLaberintoX - 1, nuevoY: nodo.y, nuevoX: nodo.x + 1 };
             }
             let j = nodo.id;
-            let visitado;
+            
             let k;
             //Evalúa que el nuevo nodo a crear aún no haya sido creado en la rama. Si al finalizar el while j no es null, el nuevo nodo se está repitiendo
             while (j != null) {
-                if (params.nuevoY == nodos[j].y && params.nuevoX == nodos[j].x) {
+                if (params.nuevoY === nodos[j].y && params.nuevoX === nodos[j].x) {
                     break;
                 }
                 j = nodos[j].padre;
             }
+            console.log("Yo soy " + nodos[j]);
+            let valorLaberintoInicial = j != null ? nodos[j].valorLaberintoFinal : null;
             switch (tipo) {
                 case 1: //Amplitud
                     if (j == null) {    //Sólo crea el hijo en caso de que no se esté repitiendo
-                        const hijo = Nodo_Costo.crearHijo(params, nodo, idNuevoNodo);
+                        const hijo = Nodo_Costo.crearHijo(params, nodo, idNuevoNodo, valorLaberintoInicial);
                         if (hijo != null) {     //Sólo crea el hijo en caso de que no sea null
                             //Se adelanta el id del siguiente hijo a + 1, se añade el hijo creado y se añade su id al final de la cola de nodos pendientes                   
                             obtenerId();
@@ -219,7 +221,7 @@ function buscar(tipo = -1) {
                     }
                     break;
                 case 2: //Costos
-                    visitado = j != null;  //True si el hijo que se creará es de un nodo ya visitado. False en caso contrario
+                    //True si el hijo que se creará es de un nodo ya visitado. False en caso contrario
                     k = nodo.id;
                     while (k != null) {
                         //Evalúa si hay algún nuevo Ciclo (definición en la clase Nodo Costo) en la rama
@@ -229,7 +231,7 @@ function buscar(tipo = -1) {
                         k = nodos[k].padre;
                     }
                     if (j == null || j < k) {   //Sólo crea el hijo en caso de que no se esté repitiendo o que el nodo a repetir haya sido creado antes del nuevo ciclo
-                        const hijo = Nodo_Costo.crearHijo(params, nodo, idNuevoNodo, visitado);
+                        const hijo = Nodo_Costo.crearHijo(params, nodo, idNuevoNodo, valorLaberintoInicial);
                         if (hijo != null) {
                             obtenerId();
                             nodos.push(hijo);
@@ -248,7 +250,7 @@ function buscar(tipo = -1) {
                 case 3: //Profundidad evitando ciclos
 
                     if (j == null) {
-                        const hijo = Nodo_Costo.crearHijo(params, nodo, idNuevoNodo);
+                        const hijo = Nodo_Costo.crearHijo(params, nodo, idNuevoNodo, valorLaberintoInicial);
                         if (hijo != null) {
                             //Lo mismo que amplitud, pero esteril cambia a false y el hijo se añade en la segunda posición de la cola, puesto que la primera es eliminada
                             esteril = false;
@@ -278,7 +280,7 @@ function buscar(tipo = -1) {
                             k = nodos[k].padre;
                         }*/
                         if (j == null /*|| j < k*/) {   //Sólo crea el hijo en caso de que no se esté repitiendo o que el nodo a repetir haya sido creado antes del nuevo ciclo
-                            const hijo = Nodo_Costo.crearHijo(params, nodo, idNuevoNodo, visitado);
+                            const hijo = Nodo_Costo.crearHijo(params, nodo, idNuevoNodo, valorLaberintoInicial);
                             if (hijo != null) {                         
                                 obtenerId();
                                 nodos.push(hijo);
@@ -308,14 +310,17 @@ function buscar(tipo = -1) {
                         k = nodos[k].padre;
                     }
                     if (j == null || j < k) {   //Sólo crea el hijo en caso de que no se esté repitiendo o que el nodo a repetir haya sido creado antes del nuevo ciclo
-                        const hijo = Nodo_Costo.crearHijo(params, nodo, idNuevoNodo, visitado);
+                        const hijo = Nodo_Costo.crearHijo(params, nodo, idNuevoNodo, valorLaberintoInicial);
                         if (hijo != null) {
                             obtenerId();
                             nodos.push(hijo);
                             let l = nodosPendientes.length;
                             //Se ubica el id del nodo en la cola de nodos pendientes de acuerdo a su costo
                             for (let i = 1; i < l; i++) {
-                                if (h_manhattan( nodos[nodosPendientes[i]]) + nodos[nodosPendientes[i]].costoAcumulado> h_manhattan( hijo)+hijo.costoAcumulado) {
+                                //console.log(nodosPendientes);
+                                //console.log(`La heurística del nodo id: ${nodosPendientes[i]} padre:${nodos[nodosPendientes[i]].padre} en x: ${nodos[nodosPendientes[i]].x} y: ${nodos[nodosPendientes[i]].y} es ${h_manhattan( nodos[nodosPendientes[i]]) + nodos[nodosPendientes[i]].costoAcumulado}`);
+                                //console.log(`La heurística del nodo id: ${hijo.id} padre:${hijo.padre} en x: ${hijo.x} y: ${hijo.y} es ${h_manhattan( hijo) + hijo.costoAcumulado}`);
+                                if (h_manhattan( nodos[nodosPendientes[i]]) + nodos[nodosPendientes[i]].costoAcumulado > h_manhattan(hijo)+hijo.costoAcumulado) {
                                     nodosPendientes.splice(i, 0, hijo.id);
                                     break;
                                 }
@@ -330,72 +335,79 @@ function buscar(tipo = -1) {
     }
 }
 
-class Nodo {    //Clase padre para los nodos
-    constructor(id, padre, y, x) {
+class Nodo_Costo {
+    constructor(id, padre, y, x, costoAcumulado = 0,profundidad=0, estado = { tipo: 0, duracion: 1 }, valorLaberintoInicial) {
+        this.valorLaberintoInicial = valorLaberintoInicial == null ? parseInt(laberinto[y][x]) : valorLaberintoInicial;
         this.id = id;
         this.padre = padre;
         this.y = y;
         this.x = x;
-    }
-    static crearHijo(params, nodo, id) {
-        //Crea el hijo sólo si las condiciones enviadas no se cumplen y si en esa posición no existen muros
-        if (params.condicion) { }
-        else if (laberinto[params.nuevoY][params.nuevoX] != valoresMatriz.muro) {
-            return new Nodo(id, nodo.id, params.nuevoY, params.nuevoX);
-        }
-        return null;
-    }
-}
-
-class Nodo_Costo extends Nodo {
-    constructor(id, padre, y, x, costoAcumulado = 0,heuristica,profundidad=0, estado = { tipo: 0, duracion: 1 }, visitado = false) {
-        super(id, padre, y, x);
         //Se define el estado como el estado del nodo padre
         this.estado = { tipo: estado.tipo, duracion: estado.duracion };
-        let valorLaberinto = laberinto[y][x];
         this.nuevoCiclo = false;
         this.profundidad=profundidad;
+        this.valorLaberintoFinal = this.valorLaberintoInicial;
         //Si la duración del estado es 0, se cambia al valor por defecto
-        if (estado.duracion == 0) { this.estado = { tipo: 0, duracion: 1 } }
+        if (estado.duracion == 0) { this.estado = { tipo: 0, duracion: 1 }; this.nuevoCiclo = true;}
+        console.log("El valorLaberintoInicial es: " + this.valorLaberintoInicial);
         switch (this.estado.tipo) {     //Evalúa el tipo del estado
             case 0: //Sin estado
                 //El costo de la casilla cambia dependiendo si hay o no un koopa
-                this.costo = valorLaberinto == valoresMatriz.koopa ? costosMatriz.koopa : costosMatriz.casillaLibre;
-                if (valorLaberinto == valoresMatriz.estrella && !visitado) {
-                    /*Si en la casilla hay una estrella y el nodo no ha sido visitado, quiere decir que la estrella no ha sido consumida
-                    El estado cambia al tipo estrella con duración 6 y se establece un nuevo ciclo en el nodo*/
-                    this.estado = { tipo: 1, duracion: 6 };
-                    this.nuevoCiclo = true;
+                switch(this.valorLaberintoInicial) {
+                    case valoresMatriz.estrella:
+                        console.log("entro aquí");
+                        this.estado = { tipo: 1, duracion: 6 };
+                        this.nuevoCiclo = true;
+                        this.valorLaberintoFinal = valoresMatriz.casillaLibre;
+                        break;
+                    case valoresMatriz.flor:
+                        this.estado = { tipo: 2, duracion: 1 };
+                        this.nuevoCiclo = true;
+                        this.valorLaberintoFinal = valoresMatriz.casillaLibre;
+                        break;
+                    default:
                 }
-                else if (valorLaberinto == valoresMatriz.flor && !visitado) {
-                    //El mismo caso que la estrella, pero con una flor
-                    this.estado = { tipo: 2, duracion: 1 };
-                    this.nuevoCiclo = true;
-                }
+                this.costo = this.valorLaberintoInicial == valoresMatriz.koopa ? costosMatriz.koopa : costosMatriz.casillaLibre;
                 break;
             case 1: //Con Estrella
                 //El costo con la estrella siempre es el mismo
-                this.costo = costosMatriz.conEstrella;
-                //La duración aumenta si atrapa una nueva estrella, y disminuye en el caso contrario
-                this.estado.duracion = valorLaberinto == valoresMatriz.estrella && !visitado ? this.estado.duracion + 5 : this.estado.duracion - 1;
-                this.nuevoCiclo = valorLaberinto == valoresMatriz.estrella && !visitado ? true : false;
-
+                switch(this.valorLaberintoInicial) {
+                    case valoresMatriz.estrella:
+                        console.log("entro aquí");
+                        this.estado.duracion += 6;
+                    case valoresMatriz.koopa:
+                        this.nuevoCiclo = true;
+                        this.valorLaberintoFinal = valoresMatriz.casillaLibre;
+                    default:
+                        this.estado.duracion -= 1;
+                        this.costo = costosMatriz.conEstrella;
+                }
                 break;
             default: //Con Flor
-                this.costo = costosMatriz.casillaLibre;
-                //La Flor sólo se gasta contra un Koopa
-                if (valorLaberinto == valoresMatriz.flor && !visitado) {
-                    this.estado.duracion += 1;
-                    this.nuevoCiclo = true;
+                switch(this.valorLaberintoInicial) {
+                    case valoresMatriz.flor:
+                        this.estado.duracion += 1;
+                        this.nuevoCiclo = true;
+                        this.valorLaberintoFinal = valoresMatriz.casillaLibre;
+                        break;
+                    case valoresMatriz.koopa:
+                        this.estado.duracion -= 1;
+                        this.nuevoCiclo = true;
+                        this.valorLaberintoFinal = valoresMatriz.casillaLibre;
+                        break;
+                    default:
                 }
-                else if (valorLaberinto == valoresMatriz.koopa) { this.estado.duracion -= 1; }
+                this.costo = costosMatriz.casillaLibre;
         }
         //El costo acumulado del padre más el costo actual
         this.costoAcumulado = costoAcumulado + this.costo;
     }
-    static crearHijo(params, nodo, id, visitado) {
-        let hijo = super.crearHijo(params, nodo, id);
-        return hijo == null ? hijo : new Nodo_Costo(hijo.id, hijo.padre, hijo.y, hijo.x, nodo.costoAcumulado,null, nodo.profundidad+1,nodo.estado, visitado);
+    static crearHijo(params, nodo, id, valorLaberintoInicial) {
+        if (params.condicion) {}
+        else if (laberinto[params.nuevoY][params.nuevoX] != valoresMatriz.muro) {
+            return new Nodo_Costo(id, nodo.id, params.nuevoY, params.nuevoX, nodo.costoAcumulado, nodo.profundidad+1,nodo.estado, valorLaberintoInicial);
+        }
+        return null;
     }
 }
 
