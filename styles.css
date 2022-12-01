@@ -15,13 +15,21 @@
     padding-left: 2rem;
 }
 
+#nodosHijos {
+    display: flex;
+}
+
 body {
     background-color: aquamarine;
 }
 
+.camino {
+    background-color: greenyellow;
+}
+
 .grid-container {
     display: inline-grid;
-    background-color: aqua;
+    background-color: coral;
     grid-template-columns: auto auto;
     position: absolute;
     left: 50%;
@@ -30,7 +38,6 @@ body {
 
 .casilla {
     display: flex;
-    background-color: coral;
     width: 64px;
     height: 64px;
     justify-content: center;
